@@ -7,6 +7,7 @@ class TaskViewModel: ObservableObject {
     @Published var showingNewTaskSheet = false
     @Published var selectedFilter: TaskFilter = .all
     @Published var selectedTabIndex = 0
+    @Published var statisticsNeedsUpdate = false
     
     private let tasksKey = "savedTasks"
     
@@ -38,6 +39,7 @@ class TaskViewModel: ObservableObject {
             userInfo: ["type": ToastType.added.rawValue]
         )
         selectedTabIndex = 0
+        updateStatistics()
     }
     
     func deleteTask(_ task: TaskTask) {
@@ -48,6 +50,7 @@ class TaskViewModel: ObservableObject {
             object: nil,
             userInfo: ["type": ToastType.deleted.rawValue]
         )
+        updateStatistics()
     }
     
     func toggleTaskCompletion(_ task: TaskTask) {
@@ -62,6 +65,7 @@ class TaskViewModel: ObservableObject {
                     "completed": tasks[index].isCompleted
                 ]
             )
+            updateStatistics()
         }
     }
     
@@ -74,6 +78,7 @@ class TaskViewModel: ObservableObject {
                 object: nil,
                 userInfo: ["type": ToastType.updated.rawValue]
             )
+            updateStatistics()
         }
     }
     
@@ -93,22 +98,10 @@ class TaskViewModel: ObservableObject {
         }
     }
     
-    // MARK: - Statistics
-    
-    var totalTasksCount: Int {
-        tasks.count
-    }
-    
-    var completedTasksCount: Int {
-        tasks.filter { $0.isCompleted }.count
-    }
-    
-    func taskCount(for priority: TaskTask.Priority) -> Int {
-        tasks.filter { $0.priority == priority }.count
-    }
-    
-    func taskCount(for category: TaskTask.Category) -> Int {
-        tasks.filter { $0.category == category }.count
+    private func updateStatistics() {
+        withAnimation {
+            statisticsNeedsUpdate.toggle()
+        }
     }
     
     // MARK: - Storage
@@ -123,6 +116,7 @@ class TaskViewModel: ObservableObject {
         if let data = UserDefaults.standard.data(forKey: tasksKey),
            let decoded = try? JSONDecoder().decode([TaskTask].self, from: data) {
             tasks = decoded
+            updateStatistics()
         }
     }
 }
