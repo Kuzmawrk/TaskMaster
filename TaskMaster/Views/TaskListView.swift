@@ -37,20 +37,14 @@ struct TaskListView: View {
                 
                 LazyVStack(spacing: 12) {
                     ForEach(viewModel.filteredTasks(viewModel.selectedFilter)) { task in
-                        TaskRow(task: task) {
-                            withAnimation {
-                                viewModel.toggleTaskCompletion(task)
-                            }
-                        }
-                        .contextMenu {
-                            Button(role: .destructive) {
+                        NavigationLink(destination: TaskDetailView(viewModel: viewModel, task: task)) {
+                            TaskRow(task: task) {
                                 withAnimation {
-                                    viewModel.deleteTask(task)
+                                    viewModel.toggleTaskCompletion(task)
                                 }
-                            } label: {
-                                Label("Delete", systemImage: "trash")
                             }
                         }
+                        .buttonStyle(PlainButtonStyle())
                     }
                 }
                 .padding(.horizontal)

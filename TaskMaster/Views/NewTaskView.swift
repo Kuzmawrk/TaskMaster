@@ -108,61 +108,17 @@ struct NewTaskView: View {
             category: category
         )
         viewModel.addTask(task)
+        clearFields()
         dismiss()
     }
     
-    private func priorityColor(for priority: TaskTask.Priority) -> Color {
-        switch priority {
-        case .low:
-            return .green
-        case .medium:
-            return .yellow
-        case .high:
-            return .red
-        }
-    }
-}
-
-struct PriorityPickerView: View {
-    @Environment(\.dismiss) private var dismiss
-    @Binding var selectedPriority: TaskTask.Priority
-    
-    var body: some View {
-        NavigationView {
-            List(TaskTask.Priority.allCases, id: \.self) { priority in
-                Button {
-                    selectedPriority = priority
-                    dismiss()
-                } label: {
-                    HStack {
-                        Label {
-                            Text(priority.rawValue)
-                        } icon: {
-                            Circle()
-                                .fill(priorityColor(for: priority))
-                                .frame(width: 12, height: 12)
-                        }
-                        
-                        Spacer()
-                        
-                        if priority == selectedPriority {
-                            Image(systemName: "checkmark")
-                                .foregroundColor(.blue)
-                        }
-                    }
-                }
-                .foregroundColor(.primary)
-            }
-            .navigationTitle("Select Priority")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-            }
-        }
+    private func clearFields() {
+        title = ""
+        taskDescription = ""
+        dueDate = Date()
+        priority = .medium
+        category = .personal
+        focusedField = nil
     }
     
     private func priorityColor(for priority: TaskTask.Priority) -> Color {
@@ -173,48 +129,6 @@ struct PriorityPickerView: View {
             return .yellow
         case .high:
             return .red
-        }
-    }
-}
-
-struct CategoryPickerView: View {
-    @Environment(\.dismiss) private var dismiss
-    @Binding var selectedCategory: TaskTask.Category
-    
-    var body: some View {
-        NavigationView {
-            List(TaskTask.Category.allCases, id: \.self) { category in
-                Button {
-                    selectedCategory = category
-                    dismiss()
-                } label: {
-                    HStack {
-                        Label {
-                            Text(category.rawValue)
-                        } icon: {
-                            Image(systemName: category.icon)
-                                .foregroundColor(.blue)
-                        }
-                        
-                        Spacer()
-                        
-                        if category == selectedCategory {
-                            Image(systemName: "checkmark")
-                                .foregroundColor(.blue)
-                        }
-                    }
-                }
-                .foregroundColor(.primary)
-            }
-            .navigationTitle("Select Category")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-            }
         }
     }
 }

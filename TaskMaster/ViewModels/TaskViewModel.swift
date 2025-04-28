@@ -6,6 +6,7 @@ class TaskViewModel: ObservableObject {
     @Published var tasks: [TaskTask] = []
     @Published var showingNewTaskSheet = false
     @Published var selectedFilter: TaskFilter = .all
+    @Published var selectedTabIndex = 0
     
     private let tasksKey = "savedTasks"
     
@@ -29,6 +30,8 @@ class TaskViewModel: ObservableObject {
     func addTask(_ task: TaskTask) {
         tasks.append(task)
         saveTasks()
+        showTaskAddedNotification()
+        selectedTabIndex = 0 // Switch to first tab
     }
     
     func deleteTask(_ task: TaskTask) {
@@ -78,4 +81,14 @@ class TaskViewModel: ObservableObject {
             tasks = decoded
         }
     }
+    
+    private func showTaskAddedNotification() {
+        let notificationCenter = NotificationCenter.default
+        let notification = Notification(name: .taskAdded)
+        notificationCenter.post(notification)
+    }
+}
+
+extension Notification.Name {
+    static let taskAdded = Notification.Name("taskAdded")
 }
