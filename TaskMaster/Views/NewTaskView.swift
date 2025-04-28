@@ -17,24 +17,38 @@ struct NewTaskView: View {
     
     var body: some View {
         NavigationView {
-            Form {
-                Section {
-                    TextField("Task Title", text: $title)
-                        .focused($focusedField, equals: .title)
-                        .submitLabel(.next)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    // Title & Description
+                    VStack(alignment: .leading, spacing: 16) {
+                        TextField("Task Title", text: $title)
+                            .font(.title2)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .focused($focusedField, equals: .title)
+                            .submitLabel(.next)
+                        
+                        TextField("Description", text: $taskDescription, axis: .vertical)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .lineLimit(3...6)
+                            .focused($focusedField, equals: .description)
+                            .submitLabel(.done)
+                    }
                     
-                    TextField("Description", text: $taskDescription, axis: .vertical)
-                        .focused($focusedField, equals: .description)
-                        .submitLabel(.done)
-                        .lineLimit(3...6)
-                }
-                
-                Section {
-                    DatePicker("Due Date", selection: $dueDate, displayedComponents: [.date, .hourAndMinute])
+                    // Due Date
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Due Date")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        
+                        DatePicker("", selection: $dueDate)
+                            .datePickerStyle(.compact)
+                            .labelsHidden()
+                    }
                     
                     // Priority Selection
                     VStack(alignment: .leading, spacing: 10) {
                         Text("Priority")
+                            .font(.subheadline)
                             .foregroundColor(.secondary)
                         
                         HStack(spacing: 12) {
@@ -47,11 +61,11 @@ struct NewTaskView: View {
                             }
                         }
                     }
-                    .padding(.vertical, 8)
                     
                     // Category Selection
                     VStack(alignment: .leading, spacing: 10) {
                         Text("Category")
+                            .font(.subheadline)
                             .foregroundColor(.secondary)
                         
                         ScrollView(.horizontal, showsIndicators: false) {
@@ -66,8 +80,25 @@ struct NewTaskView: View {
                             }
                         }
                     }
-                    .padding(.vertical, 8)
+                    
+                    Spacer(minLength: 20)
+                    
+                    // Add Button
+                    Button {
+                        addTask()
+                    } label: {
+                        Text("Add Task")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(title.isEmpty ? Color.blue.opacity(0.3) : Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(12)
+                    }
+                    .disabled(title.isEmpty)
+                    .buttonStyle(CustomButtonStyle())
                 }
+                .padding()
             }
             .navigationTitle("New Task")
             .navigationBarTitleDisplayMode(.inline)
@@ -76,13 +107,7 @@ struct NewTaskView: View {
                     Button("Cancel") {
                         dismiss()
                     }
-                }
-                
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Add") {
-                        addTask()
-                    }
-                    .disabled(title.isEmpty)
+                    .buttonStyle(CustomButtonStyle())
                 }
             }
             .onSubmit {
