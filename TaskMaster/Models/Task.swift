@@ -8,7 +8,6 @@ struct TaskTask: Identifiable, Codable, Equatable {
     var isCompleted: Bool
     var priority: Priority
     var category: Category
-    var reminderEnabled: Bool
     
     init(id: UUID = UUID(), 
          title: String = "",
@@ -16,8 +15,7 @@ struct TaskTask: Identifiable, Codable, Equatable {
          dueDate: Date = Date(),
          isCompleted: Bool = false,
          priority: Priority = .medium,
-         category: Category = .personal,
-         reminderEnabled: Bool = false) {
+         category: Category = .personal) {
         self.id = id
         self.title = title
         self.description = description
@@ -25,7 +23,6 @@ struct TaskTask: Identifiable, Codable, Equatable {
         self.isCompleted = isCompleted
         self.priority = priority
         self.category = category
-        self.reminderEnabled = reminderEnabled
     }
 }
 

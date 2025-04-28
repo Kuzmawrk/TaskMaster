@@ -31,12 +31,6 @@ struct TaskRow: View {
                         .font(.system(size: 16, weight: .semibold))
                         .strikethrough(task.isCompleted)
                         .foregroundColor(task.isCompleted ? .gray : .primary)
-                    
-                    if task.reminderEnabled {
-                        Image(systemName: "bell.fill")
-                            .font(.system(size: 12))
-                            .foregroundColor(.blue)
-                    }
                 }
                 
                 HStack(spacing: 8) {

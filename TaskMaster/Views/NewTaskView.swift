@@ -9,7 +9,6 @@ struct NewTaskView: View {
     @State private var dueDate = Date()
     @State private var priority: TaskTask.Priority = .medium
     @State private var category: TaskTask.Category = .personal
-    @State private var reminderEnabled = false
     @FocusState private var focusedField: Field?
     
     private enum Field {
@@ -47,10 +46,6 @@ struct NewTaskView: View {
                                 .tag(category)
                         }
                     }
-                }
-                
-                Section {
-                    Toggle("Enable Reminder", isOn: $reminderEnabled)
                 }
             }
             .navigationTitle("New Task")
@@ -97,8 +92,7 @@ struct NewTaskView: View {
             description: taskDescription,
             dueDate: dueDate,
             priority: priority,
-            category: category,
-            reminderEnabled: reminderEnabled
+            category: category
         )
         viewModel.addTask(task)
         dismiss()
