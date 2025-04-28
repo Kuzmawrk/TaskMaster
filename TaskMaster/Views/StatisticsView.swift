@@ -8,6 +8,54 @@ struct StatisticsView: View {
         case week = "Week"
         case month = "Month"
         case year = "Year"
+        
+        var days: Int {
+            switch self {
+            case .week: return 7
+            case .month: return 30
+            case .year: return 365
+            }
+        }
+    }
+    
+    private var filteredTasks: [TaskTask] {
+        let calendar = Calendar.current
+        let today = Date()
+        let startDate = calendar.date(byAdding: .day, value: -selectedTimeFrame.days, to: today)!
+        
+        return viewModel.tasks.filter { task in
+            task.dueDate >= startDate && task.dueDate <= today
+        }
+    }
+    
+    private var totalTasks: Int {
+        filteredTasks.count
+    }
+    
+    private var completedTasks: Int {
+        filteredTasks.filter { $0.isCompleted }.count
+    }
+    
+    private var completionRate: Double {
+        guard totalTasks > 0 else { return 0 }
+        return Double(completedTasks) / Double(totalTasks)
+    }
+    
+    private var priorityDistribution: [(priority: TaskTask.Priority, count: Int)] {
+        TaskTask.Priority.allCases.map { priority in
+            (priority, filteredTasks.filter { $0.priority == priority }.count)
+        }
+    }
+    
+    private var categoryDistribution: [(category: TaskTask.Category, count: Int)] {
+        TaskTask.Category.allCases.map { category in
+            (category, filteredTasks.filter { $0.category == category }.count)
+        }
+    }
+    
+    private var overdueTasks: Int {
+        let now = Date()
+        return filteredTasks.filter { !$0.isCompleted && $0.dueDate < now }.count
     }
     
     var body: some View {
@@ -28,19 +76,30 @@ struct StatisticsView: View {
                     HStack(spacing: 16) {
                         StatCard(
                             title: "Total Tasks",
-                            value: "\(viewModel.totalTasksCount)",
+                            value: "\(totalTasks)",
                             icon: "list.bullet.circle.fill",
                             color: .blue
                         )
                         
                         StatCard(
                             title: "Completed",
-                            value: "\(viewModel.completedTasksCount)",
+                            value: "\(completedTasks)",
                             icon: "checkmark.circle.fill",
                             color: .green
                         )
                     }
                     .padding(.horizontal)
+                    
+                    // Overdue Tasks
+                    if overdueTasks > 0 {
+                        StatCard(
+                            title: "Overdue Tasks",
+                            value: "\(overdueTasks)",
+                            icon: "exclamationmark.circle.fill",
+                            color: .red
+                        )
+                        .padding(.horizontal)
+                    }
                     
                     // Priority Distribution
                     VStack(alignment: .leading, spacing: 16) {
@@ -49,11 +108,11 @@ struct StatisticsView: View {
                             .padding(.horizontal)
                         
                         VStack(spacing: 12) {
-                            ForEach(TaskTask.Priority.allCases, id: \.self) { priority in
+                            ForEach(priorityDistribution, id: \.priority) { item in
                                 PriorityProgressBar(
-                                    priority: priority,
-                                    count: viewModel.taskCount(for: priority),
-                                    total: viewModel.totalTasksCount
+                                    priority: item.priority,
+                                    count: item.count,
+                                    total: totalTasks
                                 )
                             }
                         }
@@ -71,11 +130,11 @@ struct StatisticsView: View {
                             .padding(.horizontal)
                         
                         VStack(spacing: 12) {
-                            ForEach(TaskTask.Category.allCases, id: \.self) { category in
+                            ForEach(categoryDistribution, id: \.category) { item in
                                 CategoryRow(
-                                    category: category,
-                                    count: viewModel.taskCount(for: category),
-                                    total: viewModel.totalTasksCount
+                                    category: item.category,
+                                    count: item.count,
+                                    total: totalTasks
                                 )
                             }
                         }
@@ -94,19 +153,19 @@ struct StatisticsView: View {
                         
                         HStack {
                             CompletionRateRing(
-                                progress: Double(viewModel.completedTasksCount) / Double(max(1, viewModel.totalTasksCount))
+                                progress: completionRate
                             )
                             .frame(width: 150, height: 150)
                             
                             VStack(alignment: .leading, spacing: 8) {
                                 CompletionStatRow(
                                     title: "Completed",
-                                    count: viewModel.completedTasksCount,
+                                    count: completedTasks,
                                     color: .green
                                 )
                                 CompletionStatRow(
                                     title: "In Progress",
-                                    count: viewModel.totalTasksCount - viewModel.completedTasksCount,
+                                    count: totalTasks - completedTasks,
                                     color: .orange
                                 )
                             }
