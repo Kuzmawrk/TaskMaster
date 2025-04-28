@@ -9,8 +9,6 @@ struct NewTaskView: View {
     @State private var dueDate = Date()
     @State private var priority: TaskTask.Priority = .medium
     @State private var category: TaskTask.Category = .personal
-    @State private var showingPriorityPicker = false
-    @State private var showingCategoryPicker = false
     @FocusState private var focusedField: Field?
     
     private enum Field {
@@ -34,52 +32,41 @@ struct NewTaskView: View {
                 Section {
                     DatePicker("Due Date", selection: $dueDate, displayedComponents: [.date, .hourAndMinute])
                     
-                    // Priority Button
-                    Button(action: { showingPriorityPicker = true }) {
-                        HStack {
-                            Text("Priority")
-                                .foregroundColor(.primary)
-                            
-                            Spacer()
-                            
-                            HStack(spacing: 8) {
-                                Circle()
-                                    .fill(priorityColor(for: priority))
-                                    .frame(width: 12, height: 12)
-                                Text(priority.rawValue)
-                                    .foregroundColor(.secondary)
-                                Image(systemName: "chevron.right")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(.secondary)
-                                    .opacity(0.7)
+                    // Priority Selection
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Priority")
+                            .foregroundColor(.secondary)
+                        
+                        HStack(spacing: 12) {
+                            ForEach(TaskTask.Priority.allCases, id: \.self) { priorityOption in
+                                PriorityButton(
+                                    priority: priorityOption,
+                                    isSelected: priority == priorityOption,
+                                    action: { priority = priorityOption }
+                                )
                             }
                         }
                     }
-                    .contentShape(Rectangle()) // Увеличиваем область нажатия
-                    .buttonStyle(PlainButtonStyle())
+                    .padding(.vertical, 8)
                     
-                    // Category Button
-                    Button(action: { showingCategoryPicker = true }) {
-                        HStack {
-                            Text("Category")
-                                .foregroundColor(.primary)
-                            
-                            Spacer()
-                            
-                            HStack(spacing: 8) {
-                                Image(systemName: category.icon)
-                                    .foregroundColor(.blue)
-                                Text(category.rawValue)
-                                    .foregroundColor(.secondary)
-                                Image(systemName: "chevron.right")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(.secondary)
-                                    .opacity(0.7)
+                    // Category Selection
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Category")
+                            .foregroundColor(.secondary)
+                        
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 12) {
+                                ForEach(TaskTask.Category.allCases, id: \.self) { categoryOption in
+                                    CategoryButton(
+                                        category: categoryOption,
+                                        isSelected: category == categoryOption,
+                                        action: { category = categoryOption }
+                                    )
+                                }
                             }
                         }
                     }
-                    .contentShape(Rectangle()) // Увеличиваем область нажатия
-                    .buttonStyle(PlainButtonStyle())
+                    .padding(.vertical, 8)
                 }
             }
             .navigationTitle("New Task")
@@ -111,83 +98,6 @@ struct NewTaskView: View {
             .onTapGesture {
                 focusedField = nil
             }
-            .sheet(isPresented: $showingPriorityPicker) {
-                NavigationView {
-                    List(TaskTask.Priority.allCases, id: \.self) { priority in
-                        Button {
-                            self.priority = priority
-                            showingPriorityPicker = false
-                        } label: {
-                            HStack {
-                                Label {
-                                    Text(priority.rawValue)
-                                        .foregroundColor(.primary)
-                                } icon: {
-                                    Circle()
-                                        .fill(priorityColor(for: priority))
-                                        .frame(width: 12, height: 12)
-                                }
-                                
-                                Spacer()
-                                
-                                if self.priority == priority {
-                                    Image(systemName: "checkmark")
-                                        .foregroundColor(.blue)
-                                }
-                            }
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                    }
-                    .navigationTitle("Select Priority")
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .cancellationAction) {
-                            Button("Cancel") {
-                                showingPriorityPicker = false
-                            }
-                        }
-                    }
-                }
-            }
-            .sheet(isPresented: $showingCategoryPicker) {
-                NavigationView {
-                    List(TaskTask.Category.allCases, id: \.self) { category in
-                        Button {
-                            self.category = category
-                            showingCategoryPicker = false
-                        } label: {
-                            HStack {
-                                Label {
-                                    Text(category.rawValue)
-                                        .foregroundColor(.primary)
-                                } icon: {
-                                    Image(systemName: category.icon)
-                                        .foregroundColor(.blue)
-                                }
-                                
-                                Spacer()
-                                
-                                if self.category == category {
-                                    Image(systemName: "checkmark")
-                                        .foregroundColor(.blue)
-                                }
-                            }
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                    }
-                    .navigationTitle("Select Category")
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .cancellationAction) {
-                            Button("Cancel") {
-                                showingCategoryPicker = false
-                            }
-                        }
-                    }
-                }
-            }
         }
     }
     
@@ -212,8 +122,14 @@ struct NewTaskView: View {
         category = .personal
         focusedField = nil
     }
+}
+
+struct PriorityButton: View {
+    let priority: TaskTask.Priority
+    let isSelected: Bool
+    let action: () -> Void
     
-    private func priorityColor(for priority: TaskTask.Priority) -> Color {
+    private var backgroundColor: Color {
         switch priority {
         case .low:
             return .green
@@ -222,5 +138,58 @@ struct NewTaskView: View {
         case .high:
             return .red
         }
+    }
+    
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(backgroundColor)
+                    .frame(width: 12, height: 12)
+                
+                Text(priority.rawValue)
+                    .font(.system(size: 15))
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(isSelected ? Color.blue.opacity(0.1) : Color(.systemGray6))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 1)
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+}
+
+struct CategoryButton: View {
+    let category: TaskTask.Category
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Image(systemName: category.icon)
+                    .foregroundColor(isSelected ? .blue : .gray)
+                
+                Text(category.rawValue)
+                    .font(.system(size: 15))
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(isSelected ? Color.blue.opacity(0.1) : Color(.systemGray6))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 1)
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
     }
 }
