@@ -56,6 +56,7 @@ struct ContentView: View {
 
 struct ToastView: View {
     let message: String
+    @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
         HStack(spacing: 12) {
@@ -71,18 +72,14 @@ struct ToastView: View {
         .padding(.vertical, 12)
         .padding(.horizontal, 16)
         .background(
-            ZStack {
-                if #available(iOS 17.0, *) {
-                    // Use new iOS 17 materials
-                    .regularMaterial
-                } else {
-                    // Fallback for earlier versions
-                    Color(UIColor.systemBackground)
-                }
-            }
+            RoundedRectangle(cornerRadius: 15)
+                .fill(colorScheme == .dark ? Color(UIColor.systemGray6) : .white)
+                .shadow(color: Color.black.opacity(0.15), radius: 10, x: 0, y: 5)
         )
-        .clipShape(RoundedRectangle(cornerRadius: 15))
-        .shadow(color: Color.black.opacity(0.15), radius: 10, x: 0, y: 5)
+        .overlay(
+            RoundedRectangle(cornerRadius: 15)
+                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+        )
     }
 }
 
