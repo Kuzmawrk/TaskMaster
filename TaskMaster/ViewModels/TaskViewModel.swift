@@ -27,6 +27,8 @@ class TaskViewModel: ObservableObject {
         loadTasks()
     }
     
+    // MARK: - Task Management
+    
     func addTask(_ task: TaskTask) {
         tasks.append(task)
         saveTasks()
@@ -90,6 +92,26 @@ class TaskViewModel: ObservableObject {
                 .sorted { $0.dueDate < $1.dueDate }
         }
     }
+    
+    // MARK: - Statistics
+    
+    var totalTasksCount: Int {
+        tasks.count
+    }
+    
+    var completedTasksCount: Int {
+        tasks.filter { $0.isCompleted }.count
+    }
+    
+    func taskCount(for priority: TaskTask.Priority) -> Int {
+        tasks.filter { $0.priority == priority }.count
+    }
+    
+    func taskCount(for category: TaskTask.Category) -> Int {
+        tasks.filter { $0.category == category }.count
+    }
+    
+    // MARK: - Storage
     
     private func saveTasks() {
         if let encoded = try? JSONEncoder().encode(tasks) {
