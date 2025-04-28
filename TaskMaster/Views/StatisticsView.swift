@@ -3,38 +3,32 @@ import SwiftUI
 struct StatisticsView: View {
     @EnvironmentObject var viewModel: TaskViewModel
     
-    private var displayedTasks: [TaskTask] {
-        viewModel.filteredTasks(viewModel.selectedFilter)
-    }
-    
     private var totalTasks: Int {
-        displayedTasks.count
+        viewModel.tasksCount(for: viewModel.selectedFilter)
     }
     
     private var completedTasks: Int {
-        displayedTasks.filter { $0.isCompleted }.count
+        viewModel.completedTasksCount(for: viewModel.selectedFilter)
     }
     
     private var completionRate: Double {
-        guard totalTasks > 0 else { return 0 }
-        return Double(completedTasks) / Double(totalTasks)
+        viewModel.completionRate(for: viewModel.selectedFilter)
     }
     
     private var priorityDistribution: [(priority: TaskTask.Priority, count: Int)] {
         TaskTask.Priority.allCases.map { priority in
-            (priority, displayedTasks.filter { $0.priority == priority }.count)
+            (priority, viewModel.taskCount(for: priority, filter: viewModel.selectedFilter))
         }
     }
     
     private var categoryDistribution: [(category: TaskTask.Category, count: Int)] {
         TaskTask.Category.allCases.map { category in
-            (category, displayedTasks.filter { $0.category == category }.count)
+            (category, viewModel.taskCount(for: category, filter: viewModel.selectedFilter))
         }
     }
     
     private var overdueTasks: Int {
-        let now = Date()
-        return displayedTasks.filter { !$0.isCompleted && $0.dueDate < now }.count
+        viewModel.overdueTasksCount(for: viewModel.selectedFilter)
     }
     
     var body: some View {
@@ -71,7 +65,6 @@ struct StatisticsView: View {
                         )
                     }
                     .padding(.horizontal)
-                    .id(viewModel.statisticsNeedsUpdate)
                     
                     // Overdue Tasks
                     if overdueTasks > 0 {
@@ -105,7 +98,6 @@ struct StatisticsView: View {
                         .shadow(color: Color.black.opacity(0.05), radius: 10)
                     }
                     .padding(.horizontal)
-                    .id(viewModel.statisticsNeedsUpdate)
                     
                     // Category Distribution
                     VStack(alignment: .leading, spacing: 16) {
@@ -128,7 +120,6 @@ struct StatisticsView: View {
                         .shadow(color: Color.black.opacity(0.05), radius: 10)
                     }
                     .padding(.horizontal)
-                    .id(viewModel.statisticsNeedsUpdate)
                     
                     // Completion Rate
                     VStack(alignment: .leading, spacing: 16) {
@@ -161,9 +152,9 @@ struct StatisticsView: View {
                         .shadow(color: Color.black.opacity(0.05), radius: 10)
                     }
                     .padding(.horizontal)
-                    .id(viewModel.statisticsNeedsUpdate)
                 }
                 .padding(.vertical)
+                .id(viewModel.lastUpdate) // Force view update on any task changes
             }
             .navigationTitle("Statistics")
             .background(Color(.systemGroupedBackground))

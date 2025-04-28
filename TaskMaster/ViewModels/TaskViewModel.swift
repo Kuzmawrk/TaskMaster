@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import Combine
 
 @MainActor
 class TaskViewModel: ObservableObject {
@@ -7,7 +8,7 @@ class TaskViewModel: ObservableObject {
     @Published var showingNewTaskSheet = false
     @Published var selectedFilter: TaskFilter = .all
     @Published var selectedTabIndex = 0
-    @Published var statisticsNeedsUpdate = false
+    @Published private(set) var lastUpdate = Date()
     
     private let tasksKey = "savedTasks"
     
@@ -55,17 +56,19 @@ class TaskViewModel: ObservableObject {
     
     func toggleTaskCompletion(_ task: TaskTask) {
         if let index = tasks.firstIndex(where: { $0.id == task.id }) {
-            tasks[index].isCompleted.toggle()
-            saveTasks()
-            NotificationCenter.default.post(
-                name: .taskNotification,
-                object: nil,
-                userInfo: [
-                    "type": ToastType.statusChanged.rawValue,
-                    "completed": tasks[index].isCompleted
-                ]
-            )
-            updateStatistics()
+            withAnimation {
+                tasks[index].isCompleted.toggle()
+                saveTasks()
+                NotificationCenter.default.post(
+                    name: .taskNotification,
+                    object: nil,
+                    userInfo: [
+                        "type": ToastType.statusChanged.rawValue,
+                        "completed": tasks[index].isCompleted
+                    ]
+                )
+                updateStatistics()
+            }
         }
     }
     
@@ -100,7 +103,7 @@ class TaskViewModel: ObservableObject {
     
     private func updateStatistics() {
         withAnimation {
-            statisticsNeedsUpdate.toggle()
+            lastUpdate = Date()
         }
     }
     
@@ -109,6 +112,7 @@ class TaskViewModel: ObservableObject {
     private func saveTasks() {
         if let encoded = try? JSONEncoder().encode(tasks) {
             UserDefaults.standard.set(encoded, forKey: tasksKey)
+            updateStatistics()
         }
     }
     
@@ -118,6 +122,35 @@ class TaskViewModel: ObservableObject {
             tasks = decoded
             updateStatistics()
         }
+    }
+    
+    // MARK: - Statistics Calculations
+    
+    func tasksCount(for filter: TaskFilter) -> Int {
+        filteredTasks(filter).count
+    }
+    
+    func completedTasksCount(for filter: TaskFilter) -> Int {
+        filteredTasks(filter).filter { $0.isCompleted }.count
+    }
+    
+    func taskCount(for priority: TaskTask.Priority, filter: TaskFilter) -> Int {
+        filteredTasks(filter).filter { $0.priority == priority }.count
+    }
+    
+    func taskCount(for category: TaskTask.Category, filter: TaskFilter) -> Int {
+        filteredTasks(filter).filter { $0.category == category }.count
+    }
+    
+    func overdueTasksCount(for filter: TaskFilter) -> Int {
+        let now = Date()
+        return filteredTasks(filter).filter { !$0.isCompleted && $0.dueDate < now }.count
+    }
+    
+    func completionRate(for filter: TaskFilter) -> Double {
+        let total = tasksCount(for: filter)
+        guard total > 0 else { return 0 }
+        return Double(completedTasksCount(for: filter)) / Double(total)
     }
 }
 
