@@ -25,9 +25,11 @@ struct PriorityButton: View {
                 
                 Text(priority.rawValue)
                     .font(.system(size: 15))
+                    .foregroundColor(isSelected ? .blue : .primary)
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
+            .frame(height: 36)
             .background(
                 RoundedRectangle(cornerRadius: 8)
                     .fill(isSelected ? Color.blue.opacity(0.1) : Color(.systemGray6))
@@ -37,7 +39,7 @@ struct PriorityButton: View {
                     .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 1)
             )
         }
-        .buttonStyle(PlainButtonStyle())
+        .buttonStyle(CustomButtonStyle())
     }
 }
 
@@ -54,9 +56,11 @@ struct CategoryButton: View {
                 
                 Text(category.rawValue)
                     .font(.system(size: 15))
+                    .foregroundColor(isSelected ? .blue : .primary)
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
+            .frame(height: 36)
             .background(
                 RoundedRectangle(cornerRadius: 8)
                     .fill(isSelected ? Color.blue.opacity(0.1) : Color(.systemGray6))
@@ -66,6 +70,15 @@ struct CategoryButton: View {
                     .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 1)
             )
         }
-        .buttonStyle(PlainButtonStyle())
+        .buttonStyle(CustomButtonStyle())
+    }
+}
+
+struct CustomButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
+            .opacity(configuration.isPressed ? 0.9 : 1.0)
+            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
     }
 }
