@@ -3,12 +3,12 @@ import SwiftUI
 struct ContentView: View {
     @AppStorage("isDarkMode") private var isDarkMode = false
     @AppStorage("isOnboardingCompleted") private var isOnboardingCompleted = false
+    @StateObject private var viewModel = TaskViewModel()
     @State private var selectedTab = 0
     @State private var showingToast = false
     @State private var toastMessage = ""
     @State private var toastIcon = ""
     @State private var toastColor: Color = .green
-    @StateObject private var viewModel = TaskViewModel()
     
     var body: some View {
         ZStack {
@@ -24,7 +24,8 @@ struct ContentView: View {
                         }
                         .tag(0)
                     
-                    StatisticsView(viewModel: viewModel)
+                    StatisticsView()
+                        .environmentObject(viewModel)
                         .tabItem {
                             Label("Statistics", systemImage: "chart.bar.fill")
                         }
@@ -47,7 +48,7 @@ struct ContentView: View {
                             icon: toastIcon,
                             color: toastColor
                         )
-                        .padding(.bottom, 90) // Above tab bar
+                        .padding(.bottom, 90)
                         .padding(.horizontal)
                     }
                     .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -89,36 +90,5 @@ struct ContentView: View {
                 showingToast = false
             }
         }
-    }
-}
-
-struct ToastView: View {
-    let message: String
-    let icon: String
-    let color: Color
-    @Environment(\.colorScheme) var colorScheme
-    
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.system(size: 20, weight: .semibold))
-                .foregroundColor(color)
-            
-            Text(message)
-                .font(.system(size: 16, weight: .semibold))
-            
-            Spacer(minLength: 10)
-        }
-        .padding(.vertical, 12)
-        .padding(.horizontal, 16)
-        .background(
-            RoundedRectangle(cornerRadius: 15)
-                .fill(colorScheme == .dark ? Color(UIColor.systemGray6) : .white)
-                .shadow(color: Color.black.opacity(0.15), radius: 10, x: 0, y: 5)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 15)
-                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-        )
     }
 }

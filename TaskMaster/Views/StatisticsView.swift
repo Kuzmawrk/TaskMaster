@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct StatisticsView: View {
-    @ObservedObject var viewModel: TaskViewModel
+    @EnvironmentObject var viewModel: TaskViewModel
     
     private var displayedTasks: [TaskTask] {
         viewModel.filteredTasks(viewModel.selectedFilter)
@@ -41,14 +41,17 @@ struct StatisticsView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
-                    // Current Filter
-                    HStack {
-                        Image(systemName: "list.bullet.circle.fill")
-                            .foregroundColor(.blue)
-                        Text("Showing statistics for: \(viewModel.selectedFilter.title)")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
+                    // Filter selector
+                    Picker("Filter", selection: $viewModel.selectedFilter) {
+                        ForEach([TaskViewModel.TaskFilter.all,
+                                .today,
+                                .upcoming,
+                                .completed], id: \.self) { filter in
+                            Text(filter.title)
+                                .tag(filter)
+                        }
                     }
+                    .pickerStyle(.segmented)
                     .padding(.horizontal)
                     
                     // Summary Cards
@@ -164,7 +167,7 @@ struct StatisticsView: View {
     }
 }
 
-// Оставляем все вспомогательные View без изменений
+// Оставляем вспомогательные компоненты без изменений
 struct StatCard: View {
     let title: String
     let value: String
