@@ -63,15 +63,6 @@ struct NewTaskView: View {
                     }
                     .disabled(title.isEmpty)
                 }
-                
-                ToolbarItem(placement: .keyboard) {
-                    HStack {
-                        Spacer()
-                        Button("Done") {
-                            focusedField = nil
-                        }
-                    }
-                }
             }
             .onSubmit {
                 switch focusedField {
@@ -82,6 +73,9 @@ struct NewTaskView: View {
                 case .none:
                     break
                 }
+            }
+            .onTapGesture {
+                focusedField = nil
             }
         }
     }
