@@ -26,18 +26,12 @@ struct ContentView: View {
             if showingTaskAddedToast {
                 VStack {
                     Spacer()
-                    HStack {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.green)
-                        Text("Task Added Successfully")
-                            .foregroundColor(.white)
-                    }
-                    .padding()
-                    .background(Color(.systemGray6).opacity(0.95))
-                    .cornerRadius(20)
-                    .padding(.bottom, 100)
+                    ToastView(message: "Task Added Successfully")
+                        .padding(.bottom, 90) // Above tab bar
+                        .padding(.horizontal)
                 }
-                .transition(.move(edge: .bottom))
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .zIndex(1) // Ensure toast is above all content
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .taskAdded)) { _ in
@@ -46,17 +40,49 @@ struct ContentView: View {
     }
     
     private func showTaskAddedToast() {
-        withAnimation {
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
             showingTaskAddedToast = true
         }
         selectedTab = 0 // Switch to Tasks tab
         
         // Hide toast after delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-            withAnimation {
+            withAnimation(.easeOut(duration: 0.2)) {
                 showingTaskAddedToast = false
             }
         }
+    }
+}
+
+struct ToastView: View {
+    let message: String
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundColor(.green)
+            
+            Text(message)
+                .font(.system(size: 16, weight: .semibold))
+            
+            Spacer(minLength: 10)
+        }
+        .padding(.vertical, 12)
+        .padding(.horizontal, 16)
+        .background(
+            ZStack {
+                if #available(iOS 17.0, *) {
+                    // Use new iOS 17 materials
+                    .regularMaterial
+                } else {
+                    // Fallback for earlier versions
+                    Color(UIColor.systemBackground)
+                }
+            }
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 15))
+        .shadow(color: Color.black.opacity(0.15), radius: 10, x: 0, y: 5)
     }
 }
 
