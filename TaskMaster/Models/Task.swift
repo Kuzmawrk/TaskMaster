@@ -10,17 +10,6 @@ struct Task: Identifiable, Codable, Equatable {
     var category: Category
     var reminderEnabled: Bool
     
-    enum CodingKeys: String, CodingKey {
-        case id
-        case title
-        case description
-        case dueDate
-        case isCompleted
-        case priority
-        case category
-        case reminderEnabled
-    }
-    
     init(id: UUID = UUID(), 
          title: String = "",
          description: String = "",
@@ -38,31 +27,10 @@ struct Task: Identifiable, Codable, Equatable {
         self.category = category
         self.reminderEnabled = reminderEnabled
     }
-    
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        id = try container.decode(UUID.self, forKey: .id)
-        title = try container.decode(String.self, forKey: .title)
-        description = try container.decode(String.self, forKey: .description)
-        dueDate = try container.decode(Date.self, forKey: .dueDate)
-        isCompleted = try container.decode(Bool.self, forKey: .isCompleted)
-        priority = try container.decode(Priority.self, forKey: .priority)
-        category = try container.decode(Category.self, forKey: .category)
-        reminderEnabled = try container.decode(Bool.self, forKey: .reminderEnabled)
-    }
-    
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(id, forKey: .id)
-        try container.encode(title, forKey: .title)
-        try container.encode(description, forKey: .description)
-        try container.encode(dueDate, forKey: .dueDate)
-        try container.encode(isCompleted, forKey: .isCompleted)
-        try container.encode(priority, forKey: .priority)
-        try container.encode(category, forKey: .category)
-        try container.encode(reminderEnabled, forKey: .reminderEnabled)
-    }
-    
+}
+
+// MARK: - Task Enums
+extension Task {
     enum Priority: String, Codable, CaseIterable {
         case low = "Low"
         case medium = "Medium"

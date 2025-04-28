@@ -7,10 +7,7 @@ class TaskViewModel: ObservableObject {
     @Published var showingNewTaskSheet = false
     @Published var selectedFilter: TaskFilter = .all
     
-    private let userDefaults = UserDefaults.standard
     private let tasksKey = "savedTasks"
-    private let jsonEncoder = JSONEncoder()
-    private let jsonDecoder = JSONDecoder()
     
     enum TaskFilter {
         case all, today, upcoming, completed
@@ -70,22 +67,15 @@ class TaskViewModel: ObservableObject {
     }
     
     private func saveTasks() {
-        do {
-            let data = try jsonEncoder.encode(tasks)
-            userDefaults.set(data, forKey: tasksKey)
-        } catch {
-            print("Error saving tasks: \(error)")
+        if let encoded = try? JSONEncoder().encode(tasks) {
+            UserDefaults.standard.set(encoded, forKey: tasksKey)
         }
     }
     
     private func loadTasks() {
-        guard let data = userDefaults.data(forKey: tasksKey) else { return }
-        
-        do {
-            tasks = try jsonDecoder.decode([Task].self, from: data)
-        } catch {
-            print("Error loading tasks: \(error)")
-            tasks = []
+        if let data = UserDefaults.standard.data(forKey: tasksKey),
+           let decoded = try? JSONDecoder().decode([Task].self, from: data) {
+            tasks = decoded
         }
     }
 }
