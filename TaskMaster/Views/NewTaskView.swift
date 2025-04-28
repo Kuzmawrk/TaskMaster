@@ -34,31 +34,52 @@ struct NewTaskView: View {
                 Section {
                     DatePicker("Due Date", selection: $dueDate, displayedComponents: [.date, .hourAndMinute])
                     
+                    // Priority Button
                     Button(action: { showingPriorityPicker = true }) {
                         HStack {
                             Text("Priority")
+                                .foregroundColor(.primary)
+                            
                             Spacer()
-                            HStack(spacing: 4) {
+                            
+                            HStack(spacing: 8) {
                                 Circle()
                                     .fill(priorityColor(for: priority))
                                     .frame(width: 12, height: 12)
                                 Text(priority.rawValue)
                                     .foregroundColor(.secondary)
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundColor(.secondary)
+                                    .opacity(0.7)
                             }
                         }
                     }
+                    .contentShape(Rectangle()) // Увеличиваем область нажатия
+                    .buttonStyle(PlainButtonStyle())
                     
+                    // Category Button
                     Button(action: { showingCategoryPicker = true }) {
                         HStack {
                             Text("Category")
+                                .foregroundColor(.primary)
+                            
                             Spacer()
-                            HStack(spacing: 4) {
+                            
+                            HStack(spacing: 8) {
                                 Image(systemName: category.icon)
+                                    .foregroundColor(.blue)
                                 Text(category.rawValue)
                                     .foregroundColor(.secondary)
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundColor(.secondary)
+                                    .opacity(0.7)
                             }
                         }
                     }
+                    .contentShape(Rectangle()) // Увеличиваем область нажатия
+                    .buttonStyle(PlainButtonStyle())
                 }
             }
             .navigationTitle("New Task")
@@ -91,10 +112,81 @@ struct NewTaskView: View {
                 focusedField = nil
             }
             .sheet(isPresented: $showingPriorityPicker) {
-                PriorityPickerView(selectedPriority: $priority)
+                NavigationView {
+                    List(TaskTask.Priority.allCases, id: \.self) { priority in
+                        Button {
+                            self.priority = priority
+                            showingPriorityPicker = false
+                        } label: {
+                            HStack {
+                                Label {
+                                    Text(priority.rawValue)
+                                        .foregroundColor(.primary)
+                                } icon: {
+                                    Circle()
+                                        .fill(priorityColor(for: priority))
+                                        .frame(width: 12, height: 12)
+                                }
+                                
+                                Spacer()
+                                
+                                if self.priority == priority {
+                                    Image(systemName: "checkmark")
+                                        .foregroundColor(.blue)
+                                }
+                            }
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
+                    .navigationTitle("Select Priority")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Cancel") {
+                                showingPriorityPicker = false
+                            }
+                        }
+                    }
+                }
             }
             .sheet(isPresented: $showingCategoryPicker) {
-                CategoryPickerView(selectedCategory: $category)
+                NavigationView {
+                    List(TaskTask.Category.allCases, id: \.self) { category in
+                        Button {
+                            self.category = category
+                            showingCategoryPicker = false
+                        } label: {
+                            HStack {
+                                Label {
+                                    Text(category.rawValue)
+                                        .foregroundColor(.primary)
+                                } icon: {
+                                    Image(systemName: category.icon)
+                                        .foregroundColor(.blue)
+                                }
+                                
+                                Spacer()
+                                
+                                if self.category == category {
+                                    Image(systemName: "checkmark")
+                                        .foregroundColor(.blue)
+                                }
+                            }
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
+                    .navigationTitle("Select Category")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Cancel") {
+                                showingCategoryPicker = false
+                            }
+                        }
+                    }
+                }
             }
         }
     }
