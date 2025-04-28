@@ -3,63 +3,22 @@ import SwiftUI
 struct StatisticsView: View {
     @EnvironmentObject var viewModel: TaskViewModel
     
-    private var totalTasks: Int {
-        viewModel.tasksCount(for: viewModel.selectedFilter)
-    }
-    
-    private var completedTasks: Int {
-        viewModel.completedTasksCount(for: viewModel.selectedFilter)
-    }
-    
-    private var completionRate: Double {
-        viewModel.completionRate(for: viewModel.selectedFilter)
-    }
-    
-    private var priorityDistribution: [(priority: TaskTask.Priority, count: Int)] {
-        TaskTask.Priority.allCases.map { priority in
-            (priority, viewModel.taskCount(for: priority, filter: viewModel.selectedFilter))
-        }
-    }
-    
-    private var categoryDistribution: [(category: TaskTask.Category, count: Int)] {
-        TaskTask.Category.allCases.map { category in
-            (category, viewModel.taskCount(for: category, filter: viewModel.selectedFilter))
-        }
-    }
-    
-    private var overdueTasks: Int {
-        viewModel.overdueTasksCount(for: viewModel.selectedFilter)
-    }
-    
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
-                    // Filter selector
-                    Picker("Filter", selection: $viewModel.selectedFilter) {
-                        ForEach([TaskViewModel.TaskFilter.all,
-                                .today,
-                                .upcoming,
-                                .completed], id: \.self) { filter in
-                            Text(filter.title)
-                                .tag(filter)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(.horizontal)
-                    
                     // Summary Cards
                     HStack(spacing: 16) {
                         StatCard(
                             title: "Total Tasks",
-                            value: "\(totalTasks)",
+                            value: "\(viewModel.tasks.count)",
                             icon: "list.bullet.circle.fill",
                             color: Color.accentColor
                         )
                         
                         StatCard(
                             title: "Completed",
-                            value: "\(completedTasks)",
+                            value: "\(viewModel.tasks.filter { $0.isCompleted }.count)",
                             icon: "checkmark.circle.fill",
                             color: .green
                         )
@@ -67,6 +26,7 @@ struct StatisticsView: View {
                     .padding(.horizontal)
                     
                     // Overdue Tasks
+                    let overdueTasks = viewModel.tasks.filter { !$0.isCompleted && $0.dueDate < Date() }.count
                     if overdueTasks > 0 {
                         StatCard(
                             title: "Overdue Tasks",
@@ -84,11 +44,12 @@ struct StatisticsView: View {
                             .padding(.horizontal)
                         
                         VStack(spacing: 12) {
-                            ForEach(priorityDistribution, id: \.priority) { item in
+                            ForEach(TaskTask.Priority.allCases, id: \.self) { priority in
+                                let count = viewModel.tasks.filter { $0.priority == priority }.count
                                 PriorityProgressBar(
-                                    priority: item.priority,
-                                    count: item.count,
-                                    total: totalTasks
+                                    priority: priority,
+                                    count: count,
+                                    total: viewModel.tasks.count
                                 )
                             }
                         }
@@ -106,11 +67,12 @@ struct StatisticsView: View {
                             .padding(.horizontal)
                         
                         VStack(spacing: 12) {
-                            ForEach(categoryDistribution, id: \.category) { item in
+                            ForEach(TaskTask.Category.allCases, id: \.self) { category in
+                                let count = viewModel.tasks.filter { $0.category == category }.count
                                 CategoryRow(
-                                    category: item.category,
-                                    count: item.count,
-                                    total: totalTasks
+                                    category: category,
+                                    count: count,
+                                    total: viewModel.tasks.count
                                 )
                             }
                         }
@@ -127,21 +89,24 @@ struct StatisticsView: View {
                             .font(.headline)
                             .padding(.horizontal)
                         
+                        let completedCount = viewModel.tasks.filter { $0.isCompleted }.count
+                        let progress = viewModel.tasks.isEmpty ? 0.0 : Double(completedCount) / Double(viewModel.tasks.count)
+                        
                         HStack {
                             CompletionRateRing(
-                                progress: completionRate
+                                progress: progress
                             )
                             .frame(width: 150, height: 150)
                             
                             VStack(alignment: .leading, spacing: 8) {
                                 CompletionStatRow(
                                     title: "Completed",
-                                    count: completedTasks,
+                                    count: completedCount,
                                     color: .green
                                 )
                                 CompletionStatRow(
                                     title: "In Progress",
-                                    count: totalTasks - completedTasks,
+                                    count: viewModel.tasks.count - completedCount,
                                     color: .orange
                                 )
                             }
@@ -154,15 +119,12 @@ struct StatisticsView: View {
                     .padding(.horizontal)
                 }
                 .padding(.vertical)
-                .id(viewModel.lastUpdate) // Force view update on any task changes
             }
             .navigationTitle("Statistics")
             .background(Color(.systemGroupedBackground))
         }
     }
 }
-
-// MARK: - Supporting Views
 
 struct StatCard: View {
     let title: String
@@ -272,7 +234,6 @@ struct CompletionRateRing: View {
                 .trim(from: 0, to: progress)
                 .stroke(Color.green, style: StrokeStyle(lineWidth: 10, lineCap: .round))
                 .rotationEffect(.degrees(-90))
-                .animation(.easeInOut, value: progress)
             
             VStack(spacing: 4) {
                 Text("\(Int(progress * 100))%")
