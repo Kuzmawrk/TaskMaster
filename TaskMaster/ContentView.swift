@@ -3,7 +3,10 @@ import SwiftUI
 struct ContentView: View {
     @AppStorage("isDarkMode") private var isDarkMode = false
     @State private var selectedTab = 0
-    @State private var showingTaskAddedToast = false
+    @State private var showingToast = false
+    @State private var toastMessage = ""
+    @State private var toastIcon = ""
+    @State private var toastColor: Color = .green
     
     var body: some View {
         ZStack {
@@ -22,33 +25,53 @@ struct ContentView: View {
             }
             .preferredColorScheme(isDarkMode ? .dark : .light)
             
-            // Task Added Toast
-            if showingTaskAddedToast {
+            // Toast
+            if showingToast {
                 VStack {
                     Spacer()
-                    ToastView(message: "Task Added Successfully")
-                        .padding(.bottom, 90) // Above tab bar
-                        .padding(.horizontal)
+                    ToastView(
+                        message: toastMessage,
+                        icon: toastIcon,
+                        color: toastColor
+                    )
+                    .padding(.bottom, 90) // Above tab bar
+                    .padding(.horizontal)
                 }
                 .transition(.move(edge: .bottom).combined(with: .opacity))
-                .zIndex(1) // Ensure toast is above all content
+                .zIndex(1)
             }
         }
-        .onReceive(NotificationCenter.default.publisher(for: .taskAdded)) { _ in
-            showTaskAddedToast()
+        .onReceive(NotificationCenter.default.publisher(for: .taskNotification)) { notification in
+            handleTaskNotification(notification)
         }
     }
     
-    private func showTaskAddedToast() {
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-            showingTaskAddedToast = true
-        }
-        selectedTab = 0 // Switch to Tasks tab
+    private func handleTaskNotification(_ notification: Notification) {
+        guard let typeString = notification.userInfo?["type"] as? String,
+              let type = ToastType(rawValue: typeString) else { return }
         
-        // Hide toast after delay
+        toastIcon = type.icon
+        toastColor = type.color
+        
+        if type == .statusChanged {
+            if let completed = notification.userInfo?["completed"] as? Bool {
+                toastMessage = completed ? "Task Completed" : "Task Marked as Incomplete"
+            }
+        } else {
+            toastMessage = type.message
+        }
+        
+        showToast()
+    }
+    
+    private func showToast() {
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+            showingToast = true
+        }
+        
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
             withAnimation(.easeOut(duration: 0.2)) {
-                showingTaskAddedToast = false
+                showingToast = false
             }
         }
     }
@@ -56,13 +79,15 @@ struct ContentView: View {
 
 struct ToastView: View {
     let message: String
+    let icon: String
+    let color: Color
     @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: "checkmark.circle.fill")
+            Image(systemName: icon)
                 .font(.system(size: 20, weight: .semibold))
-                .foregroundColor(.green)
+                .foregroundColor(color)
             
             Text(message)
                 .font(.system(size: 16, weight: .semibold))

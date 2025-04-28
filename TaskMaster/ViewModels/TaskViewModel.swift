@@ -30,19 +30,36 @@ class TaskViewModel: ObservableObject {
     func addTask(_ task: TaskTask) {
         tasks.append(task)
         saveTasks()
-        showTaskAddedNotification()
-        selectedTabIndex = 0 // Switch to first tab
+        NotificationCenter.default.post(
+            name: .taskNotification,
+            object: nil,
+            userInfo: ["type": ToastType.added.rawValue]
+        )
+        selectedTabIndex = 0
     }
     
     func deleteTask(_ task: TaskTask) {
         tasks.removeAll { $0.id == task.id }
         saveTasks()
+        NotificationCenter.default.post(
+            name: .taskNotification,
+            object: nil,
+            userInfo: ["type": ToastType.deleted.rawValue]
+        )
     }
     
     func toggleTaskCompletion(_ task: TaskTask) {
         if let index = tasks.firstIndex(where: { $0.id == task.id }) {
             tasks[index].isCompleted.toggle()
             saveTasks()
+            NotificationCenter.default.post(
+                name: .taskNotification,
+                object: nil,
+                userInfo: [
+                    "type": ToastType.statusChanged.rawValue,
+                    "completed": tasks[index].isCompleted
+                ]
+            )
         }
     }
     
@@ -50,6 +67,11 @@ class TaskViewModel: ObservableObject {
         if let index = tasks.firstIndex(where: { $0.id == task.id }) {
             tasks[index] = task
             saveTasks()
+            NotificationCenter.default.post(
+                name: .taskNotification,
+                object: nil,
+                userInfo: ["type": ToastType.updated.rawValue]
+            )
         }
     }
     
@@ -81,14 +103,54 @@ class TaskViewModel: ObservableObject {
             tasks = decoded
         }
     }
+}
+
+enum ToastType: String {
+    case added
+    case deleted
+    case updated
+    case statusChanged
     
-    private func showTaskAddedNotification() {
-        let notificationCenter = NotificationCenter.default
-        let notification = Notification(name: .taskAdded)
-        notificationCenter.post(notification)
+    var message: String {
+        switch self {
+        case .added:
+            return "Task Added Successfully"
+        case .deleted:
+            return "Task Deleted"
+        case .updated:
+            return "Task Updated"
+        case .statusChanged:
+            return "" // Will be set dynamically
+        }
+    }
+    
+    var icon: String {
+        switch self {
+        case .added:
+            return "checkmark.circle.fill"
+        case .deleted:
+            return "trash.fill"
+        case .updated:
+            return "pencil.circle.fill"
+        case .statusChanged:
+            return "circle.inset.filled"
+        }
+    }
+    
+    var color: Color {
+        switch self {
+        case .added:
+            return .green
+        case .deleted:
+            return .red
+        case .updated:
+            return .blue
+        case .statusChanged:
+            return .green
+        }
     }
 }
 
 extension Notification.Name {
-    static let taskAdded = Notification.Name("taskAdded")
+    static let taskNotification = Notification.Name("taskNotification")
 }
