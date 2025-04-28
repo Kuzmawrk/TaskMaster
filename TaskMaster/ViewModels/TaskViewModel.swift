@@ -7,7 +7,6 @@ class TaskViewModel: ObservableObject {
     @Published var showingNewTaskSheet = false
     @Published var selectedFilter: TaskFilter = .all
     @Published var selectedTabIndex = 0
-    @Published var statisticsUpdate = UUID()
     
     private let tasksKey = "savedTasks"
     
@@ -37,7 +36,6 @@ class TaskViewModel: ObservableObject {
             userInfo: ["type": ToastType.added.rawValue]
         )
         selectedTabIndex = 0
-        updateStatistics()
     }
     
     func deleteTask(_ task: TaskTask) {
@@ -48,7 +46,6 @@ class TaskViewModel: ObservableObject {
             object: nil,
             userInfo: ["type": ToastType.deleted.rawValue]
         )
-        updateStatistics()
     }
     
     func toggleTaskCompletion(_ task: TaskTask) {
@@ -63,7 +60,6 @@ class TaskViewModel: ObservableObject {
                     "completed": tasks[index].isCompleted
                 ]
             )
-            updateStatistics()
         }
     }
     
@@ -76,7 +72,6 @@ class TaskViewModel: ObservableObject {
                 object: nil,
                 userInfo: ["type": ToastType.updated.rawValue]
             )
-            updateStatistics()
         }
     }
     
@@ -96,16 +91,9 @@ class TaskViewModel: ObservableObject {
         }
     }
     
-    private func updateStatistics() {
-        withAnimation {
-            statisticsUpdate = UUID()
-        }
-    }
-    
     private func saveTasks() {
         if let encoded = try? JSONEncoder().encode(tasks) {
             UserDefaults.standard.set(encoded, forKey: tasksKey)
-            updateStatistics()
         }
     }
     
@@ -113,35 +101,7 @@ class TaskViewModel: ObservableObject {
         if let data = UserDefaults.standard.data(forKey: tasksKey),
            let decoded = try? JSONDecoder().decode([TaskTask].self, from: data) {
             tasks = decoded
-            updateStatistics()
         }
-    }
-    
-    // MARK: - Statistics Calculations
-    
-    var totalTasksCount: Int {
-        tasks.count
-    }
-    
-    var completedTasksCount: Int {
-        tasks.filter { $0.isCompleted }.count
-    }
-    
-    var overdueTasksCount: Int {
-        tasks.filter { !$0.isCompleted && $0.dueDate < Date() }.count
-    }
-    
-    var completionRate: Double {
-        guard totalTasksCount > 0 else { return 0 }
-        return Double(completedTasksCount) / Double(totalTasksCount)
-    }
-    
-    func taskCount(for priority: TaskTask.Priority) -> Int {
-        tasks.filter { $0.priority == priority }.count
-    }
-    
-    func taskCount(for category: TaskTask.Category) -> Int {
-        tasks.filter { $0.category == category }.count
     }
 }
 

@@ -24,18 +24,11 @@ struct ContentView: View {
                         }
                         .tag(0)
                     
-                    StatisticsView()
-                        .environmentObject(viewModel)
-                        .tabItem {
-                            Label("Statistics", systemImage: "chart.bar.fill")
-                        }
-                        .tag(1)
-                    
                     SettingsView()
                         .tabItem {
                             Label("Settings", systemImage: "gear")
                         }
-                        .tag(2)
+                        .tag(1)
                 }
                 .preferredColorScheme(isDarkMode ? .dark : .light)
                 
