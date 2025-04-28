@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @AppStorage("isDarkMode") private var isDarkMode = false
+    @AppStorage("isOnboardingCompleted") private var isOnboardingCompleted = false
     @State private var selectedTab = 0
     @State private var showingToast = false
     @State private var toastMessage = ""
@@ -10,37 +11,43 @@ struct ContentView: View {
     
     var body: some View {
         ZStack {
-            TabView(selection: $selectedTab) {
-                TaskListView()
-                    .tabItem {
-                        Label("Tasks", systemImage: "checklist")
-                    }
-                    .tag(0)
-                
-                SettingsView()
-                    .tabItem {
-                        Label("Settings", systemImage: "gear")
-                    }
-                    .tag(1)
-            }
-            .preferredColorScheme(isDarkMode ? .dark : .light)
-            
-            // Toast
-            if showingToast {
-                VStack {
-                    Spacer()
-                    ToastView(
-                        message: toastMessage,
-                        icon: toastIcon,
-                        color: toastColor
-                    )
-                    .padding(.bottom, 90) // Above tab bar
-                    .padding(.horizontal)
+            if !isOnboardingCompleted {
+                OnboardingView(isOnboardingCompleted: $isOnboardingCompleted)
+                    .transition(.opacity.combined(with: .slide))
+            } else {
+                TabView(selection: $selectedTab) {
+                    TaskListView()
+                        .tabItem {
+                            Label("Tasks", systemImage: "checklist")
+                        }
+                        .tag(0)
+                    
+                    SettingsView()
+                        .tabItem {
+                            Label("Settings", systemImage: "gear")
+                        }
+                        .tag(1)
                 }
-                .transition(.move(edge: .bottom).combined(with: .opacity))
-                .zIndex(1)
+                .preferredColorScheme(isDarkMode ? .dark : .light)
+                
+                // Toast
+                if showingToast {
+                    VStack {
+                        Spacer()
+                        ToastView(
+                            message: toastMessage,
+                            icon: toastIcon,
+                            color: toastColor
+                        )
+                        .padding(.bottom, 90) // Above tab bar
+                        .padding(.horizontal)
+                    }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .zIndex(1)
+                }
             }
         }
+        .animation(.spring(response: 0.5, dampingFraction: 0.7), value: isOnboardingCompleted)
         .onReceive(NotificationCenter.default.publisher(for: .taskNotification)) { notification in
             handleTaskNotification(notification)
         }
@@ -106,8 +113,4 @@ struct ToastView: View {
                 .stroke(Color.gray.opacity(0.2), lineWidth: 1)
         )
     }
-}
-
-#Preview {
-    ContentView()
 }
