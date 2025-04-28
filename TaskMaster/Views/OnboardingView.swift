@@ -3,6 +3,7 @@ import SwiftUI
 struct OnboardingView: View {
     @Binding var isOnboardingCompleted: Bool
     @State private var currentPage = 0
+    @State private var imageScale: CGFloat = 1.0
     
     var body: some View {
         ZStack {
@@ -83,6 +84,9 @@ struct OnboardingView: View {
 
 struct OnboardingPageView: View {
     let page: OnboardingPage
+    @State private var imageScale: CGFloat = 0.8
+    @State private var imageOpacity: Double = 0
+    @State private var textOpacity: Double = 0
     
     var body: some View {
         VStack(spacing: 24) {
@@ -91,7 +95,14 @@ struct OnboardingPageView: View {
             Image(systemName: page.image)
                 .font(.system(size: 120))
                 .foregroundColor(.blue)
-                .symbolEffect(.bounce, value: true)
+                .scaleEffect(imageScale)
+                .opacity(imageOpacity)
+                .onAppear {
+                    withAnimation(.spring(response: 0.5, dampingFraction: 0.6)) {
+                        imageScale = 1.0
+                        imageOpacity = 1
+                    }
+                }
             
             VStack(spacing: 12) {
                 Text(page.title)
@@ -105,10 +116,21 @@ struct OnboardingPageView: View {
                     .foregroundColor(.secondary)
                     .padding(.horizontal, 32)
             }
+            .opacity(textOpacity)
+            .onAppear {
+                withAnimation(.easeOut(duration: 0.5).delay(0.2)) {
+                    textOpacity = 1
+                }
+            }
             
             Spacer()
             Spacer()
         }
-        .contentTransition(.opacity)
+        .onDisappear {
+            // Reset animations for reuse
+            imageScale = 0.8
+            imageOpacity = 0
+            textOpacity = 0
+        }
     }
 }
