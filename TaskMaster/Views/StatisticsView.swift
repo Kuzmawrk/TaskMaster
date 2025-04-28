@@ -2,38 +2,17 @@ import SwiftUI
 
 struct StatisticsView: View {
     @ObservedObject var viewModel: TaskViewModel
-    @State private var selectedTimeFrame: TimeFrame = .week
     
-    enum TimeFrame: String, CaseIterable {
-        case week = "Week"
-        case month = "Month"
-        case year = "Year"
-        
-        var days: Int {
-            switch self {
-            case .week: return 7
-            case .month: return 30
-            case .year: return 365
-            }
-        }
-    }
-    
-    private var filteredTasks: [TaskTask] {
-        let calendar = Calendar.current
-        let today = Date()
-        let startDate = calendar.date(byAdding: .day, value: -selectedTimeFrame.days, to: today)!
-        
-        return viewModel.tasks.filter { task in
-            task.dueDate >= startDate && task.dueDate <= today
-        }
+    private var displayedTasks: [TaskTask] {
+        viewModel.filteredTasks(viewModel.selectedFilter)
     }
     
     private var totalTasks: Int {
-        filteredTasks.count
+        displayedTasks.count
     }
     
     private var completedTasks: Int {
-        filteredTasks.filter { $0.isCompleted }.count
+        displayedTasks.filter { $0.isCompleted }.count
     }
     
     private var completionRate: Double {
@@ -43,33 +22,33 @@ struct StatisticsView: View {
     
     private var priorityDistribution: [(priority: TaskTask.Priority, count: Int)] {
         TaskTask.Priority.allCases.map { priority in
-            (priority, filteredTasks.filter { $0.priority == priority }.count)
+            (priority, displayedTasks.filter { $0.priority == priority }.count)
         }
     }
     
     private var categoryDistribution: [(category: TaskTask.Category, count: Int)] {
         TaskTask.Category.allCases.map { category in
-            (category, filteredTasks.filter { $0.category == category }.count)
+            (category, displayedTasks.filter { $0.category == category }.count)
         }
     }
     
     private var overdueTasks: Int {
         let now = Date()
-        return filteredTasks.filter { !$0.isCompleted && $0.dueDate < now }.count
+        return displayedTasks.filter { !$0.isCompleted && $0.dueDate < now }.count
     }
     
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
-                    // Time frame selector
-                    Picker("Time Frame", selection: $selectedTimeFrame) {
-                        ForEach(TimeFrame.allCases, id: \.self) { timeFrame in
-                            Text(timeFrame.rawValue)
-                                .tag(timeFrame)
-                        }
+                    // Current Filter
+                    HStack {
+                        Image(systemName: "list.bullet.circle.fill")
+                            .foregroundColor(.blue)
+                        Text("Showing statistics for: \(viewModel.selectedFilter.title)")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
                     }
-                    .pickerStyle(.segmented)
                     .padding(.horizontal)
                     
                     // Summary Cards
@@ -185,6 +164,7 @@ struct StatisticsView: View {
     }
 }
 
+// Оставляем все вспомогательные View без изменений
 struct StatCard: View {
     let title: String
     let value: String
