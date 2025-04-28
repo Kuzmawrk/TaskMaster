@@ -1,6 +1,6 @@
 import Foundation
 
-struct Task: Identifiable, Codable, Equatable {
+struct TaskTask: Identifiable, Codable, Equatable {
     let id: UUID
     var title: String
     var description: String
@@ -29,8 +29,8 @@ struct Task: Identifiable, Codable, Equatable {
     }
 }
 
-// MARK: - Task Enums
-extension Task {
+// MARK: - TaskTask Enums
+extension TaskTask {
     enum Priority: String, Codable, CaseIterable {
         case low = "Low"
         case medium = "Medium"

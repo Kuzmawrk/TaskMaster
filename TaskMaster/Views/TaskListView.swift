@@ -2,7 +2,7 @@ import SwiftUI
 
 struct TaskListView: View {
     @StateObject private var viewModel = TaskViewModel()
-    @State private var selectedTask: Task?
+    @State private var selectedTask: TaskTask?
     
     var body: some View {
         NavigationStack {

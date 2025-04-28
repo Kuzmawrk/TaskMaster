@@ -7,8 +7,8 @@ struct NewTaskView: View {
     @State private var title = ""
     @State private var taskDescription = ""
     @State private var dueDate = Date()
-    @State private var priority: Task.Priority = .medium
-    @State private var category: Task.Category = .personal
+    @State private var priority: TaskTask.Priority = .medium
+    @State private var category: TaskTask.Category = .personal
     @State private var reminderEnabled = false
     @FocusState private var focusedField: Field?
     
@@ -34,7 +34,7 @@ struct NewTaskView: View {
                     DatePicker("Due Date", selection: $dueDate, displayedComponents: [.date, .hourAndMinute])
                     
                     Picker("Priority", selection: $priority) {
-                        ForEach(Task.Priority.allCases, id: \.self) { priority in
+                        ForEach(TaskTask.Priority.allCases, id: \.self) { priority in
                             Label(priority.rawValue, systemImage: "flag.fill")
                                 .foregroundColor(priorityColor(for: priority))
                                 .tag(priority)
@@ -42,7 +42,7 @@ struct NewTaskView: View {
                     }
                     
                     Picker("Category", selection: $category) {
-                        ForEach(Task.Category.allCases, id: \.self) { category in
+                        ForEach(TaskTask.Category.allCases, id: \.self) { category in
                             Label(category.rawValue, systemImage: category.icon)
                                 .tag(category)
                         }
@@ -92,7 +92,7 @@ struct NewTaskView: View {
     }
     
     private func addTask() {
-        let task = Task(
+        let task = TaskTask(
             title: title,
             description: taskDescription,
             dueDate: dueDate,
@@ -104,7 +104,7 @@ struct NewTaskView: View {
         dismiss()
     }
     
-    private func priorityColor(for priority: Task.Priority) -> Color {
+    private func priorityColor(for priority: TaskTask.Priority) -> Color {
         switch priority {
         case .low:
             return .green

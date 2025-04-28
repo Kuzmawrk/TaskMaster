@@ -3,7 +3,7 @@ import SwiftUI
 
 @MainActor
 class TaskViewModel: ObservableObject {
-    @Published var tasks: [Task] = []
+    @Published var tasks: [TaskTask] = []
     @Published var showingNewTaskSheet = false
     @Published var selectedFilter: TaskFilter = .all
     
@@ -26,31 +26,31 @@ class TaskViewModel: ObservableObject {
         loadTasks()
     }
     
-    func addTask(_ task: Task) {
+    func addTask(_ task: TaskTask) {
         tasks.append(task)
         saveTasks()
     }
     
-    func deleteTask(_ task: Task) {
+    func deleteTask(_ task: TaskTask) {
         tasks.removeAll { $0.id == task.id }
         saveTasks()
     }
     
-    func toggleTaskCompletion(_ task: Task) {
+    func toggleTaskCompletion(_ task: TaskTask) {
         if let index = tasks.firstIndex(where: { $0.id == task.id }) {
             tasks[index].isCompleted.toggle()
             saveTasks()
         }
     }
     
-    func updateTask(_ task: Task) {
+    func updateTask(_ task: TaskTask) {
         if let index = tasks.firstIndex(where: { $0.id == task.id }) {
             tasks[index] = task
             saveTasks()
         }
     }
     
-    func filteredTasks(_ filter: TaskFilter = .all) -> [Task] {
+    func filteredTasks(_ filter: TaskFilter = .all) -> [TaskTask] {
         switch filter {
         case .all:
             return tasks.sorted { $0.dueDate < $1.dueDate }
@@ -74,7 +74,7 @@ class TaskViewModel: ObservableObject {
     
     private func loadTasks() {
         if let data = UserDefaults.standard.data(forKey: tasksKey),
-           let decoded = try? JSONDecoder().decode([Task].self, from: data) {
+           let decoded = try? JSONDecoder().decode([TaskTask].self, from: data) {
             tasks = decoded
         }
     }
